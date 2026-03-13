@@ -134,3 +134,4 @@ ShellScreen (always present, manages tabs)
 | `nav1/` | Login / Profile / Settings | Navigator 1.0 — imperative `Navigator` API |
 | `nav1_tabs/` | Online Store + Tabs | Navigator 1.0 — nested `Navigator` widgets + `BottomNavigationBar` |
 | `nav1_drawer/` | Online Store + Drawer | Navigator 1.0 — single flat Navigator + `Drawer` + `pushNamedAndRemoveUntil` |
+| `nav1_rail/` | Online Store + Rail | Navigator 1.0 — nested `Navigator` widgets + `NavigationRail` (same structure as nav1_tabs, different chrome) |
