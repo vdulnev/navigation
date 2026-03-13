@@ -61,6 +61,11 @@ final loginStateProvider =
       LoginFormNotifier.new,
     );
 
+/// Returns [LoginCredentialsError] if either field is empty, otherwise null.
+/// Single source of truth for field-level validation rules.
+LoginCredentialsError? _validate(String email, String password) =>
+    (email.isEmpty || password.isEmpty) ? const LoginCredentialsError() : null;
+
 class LoginFormNotifier extends Notifier<LoginFormState> {
   @override
   LoginFormState build() => const LoginFormEditing();
@@ -68,30 +73,11 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   void setEmail(String v) {
     switch (state) {
       case LoginFormEditing(:final password):
-        state = v.isEmpty
-            ? LoginFormInvalid(
-                email: v,
-                password: password,
-                error: const LoginCredentialsError(),
-              )
+      case LoginFormInvalid(:final password, error: LoginCredentialsError()):
+        final error = _validate(v, password);
+        state = error != null
+            ? LoginFormInvalid(email: v, password: password, error: error)
             : LoginFormEditing(email: v, password: password);
-
-      // Nested pattern: alias the inner `password` field to avoid shadowing.
-      case LoginFormInvalid(
-        :final password,
-        error: LoginCredentialsError(),
-      ):
-        final emailError = v.isEmpty ? 'Enter an email' : null;
-        final passwordError = password.isEmpty ? 'Enter password' : null;
-        if (emailError == null && passwordError == null) {
-          state = LoginFormEditing(email: v, password: password);
-        } else {
-          state = LoginFormInvalid(
-            email: v,
-            password: password,
-            error: LoginCredentialsError(),
-          );
-        }
 
       case LoginFormInvalid(:final password, error: LoginServerError()):
         // Any keystroke clears the server error — return to clean editing.
@@ -105,30 +91,11 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   void setPassword(String v) {
     switch (state) {
       case LoginFormEditing(:final email):
-        state = v.isEmpty
-            ? LoginFormInvalid(
-                email: email,
-                password: v,
-                error: const LoginCredentialsError(),
-              )
+      case LoginFormInvalid(:final email, error: LoginCredentialsError()):
+        final error = _validate(email, v);
+        state = error != null
+            ? LoginFormInvalid(email: email, password: v, error: error)
             : LoginFormEditing(email: email, password: v);
-
-      // Alias the inner `email` field to avoid shadowing.
-      case LoginFormInvalid(
-        :final email,
-        error: LoginCredentialsError(),
-      ):
-        final passwordError = v.isEmpty ? 'Enter a password' : null;
-        final emailError = email.isEmpty ? 'Enter a password' : null;
-        if (emailError == null && passwordError == null) {
-          state = LoginFormEditing(email: email, password: v);
-        } else {
-          state = LoginFormInvalid(
-            email: email,
-            password: v,
-            error: LoginCredentialsError(),
-          );
-        }
 
       case LoginFormInvalid(:final email, error: LoginServerError()):
         state = LoginFormEditing(email: email, password: v);
@@ -153,15 +120,9 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
         return false;
     }
 
-    final emailErr = email.isEmpty ? 'Enter an email' : null;
-    final passErr = password.isEmpty ? 'Enter a password' : null;
-
-    if (emailErr != null || passErr != null) {
-      state = LoginFormInvalid(
-        email: email,
-        password: password,
-        error: LoginCredentialsError(),
-      );
+    final error = _validate(email, password);
+    if (error != null) {
+      state = LoginFormInvalid(email: email, password: password, error: error);
       return false;
     }
 

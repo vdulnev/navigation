@@ -44,7 +44,7 @@ class LoginScreen extends ConsumerWidget {
                 LoginFormInvalid(
                   :final email,
                   :final password,
-                  error:final errors,
+                  error: final errors,
                 ) =>
                   _EditingBody(
                     email: email,
@@ -86,6 +86,9 @@ class _EditingBody extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final error = this.error;
+    // LoginCredentialsError is a marker — use the field values to decide
+    // which specific field error to show.
+    final isCredentialsError = error is LoginCredentialsError;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -93,7 +96,9 @@ class _EditingBody extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Email',
             border: const OutlineInputBorder(),
-            errorText: 'Enter an email',
+            errorText: isCredentialsError && email.isEmpty
+                ? 'Enter an email'
+                : null,
           ),
           keyboardType: TextInputType.emailAddress,
           onChanged: notifier.setEmail,
@@ -103,7 +108,9 @@ class _EditingBody extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Password',
             border: const OutlineInputBorder(),
-            errorText: 'Enter an password',
+            errorText: isCredentialsError && password.isEmpty
+                ? 'Enter a password'
+                : null,
           ),
           obscureText: true,
           onChanged: notifier.setPassword,
