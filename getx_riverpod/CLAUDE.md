@@ -17,9 +17,10 @@ See the root `CLAUDE.md` for the app flow and screen descriptions.
 | `lib/router/app_routes.dart` | Named route constants |
 | `lib/models/product.dart` | `Product` model + `kProducts` catalogue |
 | `lib/widgets/nav_note_card.dart` | Shared annotation card |
-| `lib/providers/auth_provider.dart` | `NotifierProvider<AuthNotifier, bool>` |
+| `lib/providers/auth_provider.dart` | `NotifierProvider<AuthNotifier, bool>` — `login()` returns `sealed AuthResult` |
 | `lib/providers/basket_provider.dart` | `NotifierProvider<BasketNotifier, List<BasketItem>>` |
 | `lib/providers/search_provider.dart` | `searchQueryProvider` + derived `searchResultsProvider` |
+| `lib/providers/login_state_provider.dart` | Sealed `LoginFormState` hierarchy + `LoginCredentialsResult` — State pattern |
 | `lib/features/shell/screens/shell_screen.dart` | `BottomNavigationBar` + `IndexedStack` with basket badge |
 | `lib/features/shop/screens/shop_screen.dart` | Product grid |
 | `lib/features/shop/screens/item_detail_screen.dart` | Detail — reads args via `Get.arguments` |
@@ -34,7 +35,7 @@ See the root `CLAUDE.md` for the app flow and screen descriptions.
 | Pattern | Code | Notes |
 |---|---|---|
 | Push named route | `Get.toNamed(AppRoutes.shopDetail, arguments: product)` | No `BuildContext` needed |
-| Await return value | `await Get.toNamed<bool>(AppRoutes.login)` | Returns value passed to `Get.back(result: …)` |
+| Await return value | `await Get.toNamed(AppRoutes.login) != true` | **No type param** — `Get.toNamed<T>` crashes at runtime (GetX bug) |
 | Pop with value | `Get.back<bool>(result: true)` | Resolves the Future on the caller side |
 | Pop without value | `Get.back()` | Caller receives `null` |
 | Pass arguments | `Get.toNamed(…, arguments: product)` | Read in target via `Get.arguments` |
@@ -46,7 +47,10 @@ See the root `CLAUDE.md` for the app flow and screen descriptions.
 | Pattern | Provider | Notes |
 |---|---|---|
 | Auth state | `NotifierProvider<AuthNotifier, bool>` | `ref.watch(authProvider)` drives auth-gated widgets |
-| Auth mutation | `ref.read(authProvider.notifier).login(…)` | Returns `Future<bool>` |
+| Auth mutation | `ref.read(authProvider.notifier).login(…)` | Returns `Future<AuthResult>` — `AuthSuccess` or `AuthError(message)` |
+| Login form state | `NotifierProvider.autoDispose<LoginFormNotifier, LoginFormState>` | 4 sealed subclasses; resets on pop |
+| Login form transitions | `state = state.onEmailChanged(v)` | State pattern — each subclass owns its transition logic |
+| Login credentials check | `sealed class LoginCredentialsResult` | `LoginCredentialsCorrect` (valid) / `LoginCredentialsError` (per-field errors) |
 | Basket state | `NotifierProvider<BasketNotifier, List<BasketItem>>` | Immutable list, replaced on each mutation |
 | Basket mutation | `ref.read(basketProvider.notifier).add(product)` | Rebuilds all watchers automatically |
 | Basket badge | `ref.watch(basketProvider.select(…))` | Fine-grained rebuild — only when count changes |
@@ -77,7 +81,7 @@ of reactive state. GetX is used purely for navigation.
 |---|---|---|
 | Navigation API | `Navigator.of(context).pushNamed(…)` | `Get.toNamed(…)` — no context |
 | Login return value | `await Navigator.of(context, rootNavigator: true).pushNamed(login)` | `await Get.toNamed<bool>(login)` |
-| Auth state | `AuthService` static class + `setState()` | `authProvider` Notifier + `ref.watch()` |
+| Auth state | `AuthService` static class + `setState()` | `authProvider` Notifier + `ref.watch()` — `login()` returns `AuthResult` |
 | Basket state | `BasketService` static list | `basketProvider` — immutable, reactive |
 | Search filtering | `setState` + local filter in widget | Derived `searchResultsProvider` |
 | Sign-out | `setState()` after logout | Just call `logout()` — watchers rebuild |

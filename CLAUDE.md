@@ -127,6 +127,52 @@ ShellScreen (always present, manages tabs)
 
 ---
 
+---
+
+## Example 3 — Online Store with GetX + Riverpod 3
+
+Same screen layout and navigation flow as Example 2.
+Replaces Navigator 1 with GetX routes and replaces local state / setState
+with Riverpod 3 providers. No nested Navigators — single flat GetX navigator.
+
+### Key navigation behaviours
+
+| Behaviour | Where |
+|---|---|
+| Push named route — no `BuildContext` | `Get.toNamed(AppRoutes.shopDetail, arguments: product)` |
+| Read route arguments | `Get.arguments as Product` |
+| Slide-up login modal | `GetPage(transition: Transition.downToUp)` |
+| Await return value (no type param — GetX bug) | `await Get.toNamed(AppRoutes.login) != true` |
+| Pop with value — no `BuildContext` | `Get.back<bool>(result: true)` |
+
+### Key state patterns
+
+| Pattern | Provider / type |
+|---|---|
+| Auth state | `NotifierProvider<AuthNotifier, bool>` — all watchers rebuild on change |
+| Auth mutation result | `sealed class AuthResult` — `AuthSuccess` / `AuthError(message)` |
+| Basket state | `NotifierProvider<BasketNotifier, List<BasketItem>>` — immutable list |
+| Fine-grained rebuild | `ref.watch(basketProvider.select(…))` — basket badge only |
+| Derived state | `Provider<List<Product>>` watching `searchQueryProvider` |
+| Login form state | `sealed class LoginFormState` — 4 subclasses (see below) |
+| Login form errors | `sealed class LoginCredentialsResult` — `LoginCredentialsCorrect` / `LoginCredentialsError` |
+
+### Login form sealed state hierarchy
+
+```
+LoginFormState (sealed)
+  ├─ LoginFormEditing   — editing; carries optional LoginCredentialsError
+  ├─ LoginFormCorrect   — both fields valid; exposes credentials getter
+  ├─ LoginFormInvalid   — server error received; carries LoginServerError
+  └─ LoginFormSubmitting — network call in flight; ignores keystrokes
+```
+
+Each subclass owns its own transition logic (`onEmailChanged` /
+`onPasswordChanged`). `LoginFormNotifier` is a thin dispatcher:
+`void setEmail(String v) => state = state.onEmailChanged(v);`
+
+---
+
 ## Sub-folders
 
 | Folder | Example | Navigation approach |
@@ -135,4 +181,4 @@ ShellScreen (always present, manages tabs)
 | `nav1_tabs/` | Online Store + Tabs | Navigator 1.0 — nested `Navigator` widgets + `BottomNavigationBar` |
 | `nav1_drawer/` | Online Store + Drawer | Navigator 1.0 — single flat Navigator + `Drawer` + `pushNamedAndRemoveUntil` |
 | `nav1_rail/` | Online Store + Rail | Navigator 1.0 — nested `Navigator` widgets + `NavigationRail` (same structure as nav1_tabs, different chrome) |
-| `getx_riverpod/` | Online Store | GetX navigation + Riverpod 3 state — `Get.toNamed`, `NotifierProvider`, derived providers |
+| `getx_riverpod/` | Online Store | GetX navigation + Riverpod 3 state — sealed `LoginFormState`, `AuthResult`, `NotifierProvider` |
