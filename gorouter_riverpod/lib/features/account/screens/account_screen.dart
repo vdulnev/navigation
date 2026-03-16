@@ -65,13 +65,19 @@ class AccountScreen extends ConsumerWidget {
           },
           child: const Text('Sign Out'),
         ),
+        const SizedBox(height: 12),
+        OutlinedButton.icon(
+          onPressed: () => context.push(AppRoutes.logs),
+          icon: const Icon(Icons.receipt_long_outlined),
+          label: const Text('View Logs'),
+        ),
         const SizedBox(height: 24),
         const NavNoteCard(
-          title: 'GoRouter: redirect fires on auth change',
+          title: 'Talker: GoRouter + Riverpod logging',
           body:
-              'Logging out notifies RouterNotifier (ChangeNotifier). GoRouter '
-              'calls redirect() — basket/checkout routes become inaccessible '
-              'without any explicit context.go() call.',
+              'TalkerRouteObserver logs every navigation event. '
+              'TalkerRiverpodObserver logs every provider state change. '
+              'Shake the device or tap "View Logs" to open TalkerScreen.',
         ),
       ],
     );

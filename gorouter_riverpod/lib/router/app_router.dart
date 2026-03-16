@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:talker_flutter/talker_flutter.dart';
 
+import '../core/talker.dart';
 import '../features/account/screens/account_screen.dart';
 import '../features/auth/screens/login_screen.dart';
 import '../features/basket/screens/basket_screen.dart';
@@ -48,6 +50,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: AppRoutes.shop,
     refreshListenable: notifier,
     redirect: notifier.redirect,
+    // Logs every push / pop / replace to the shared [talker] instance.
+    observers: [TalkerRouteObserver(talker)],
     routes: [
       // ── Shell (persistent BottomNavigationBar) ─────────────────────────
       StatefulShellRoute.indexedStack(
@@ -118,6 +122,15 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: AppRoutes.login,
         pageBuilder: (context, state) =>
             const MaterialPage(fullscreenDialog: true, child: LoginScreen()),
+      ),
+
+      // ── Log viewer — outside the shell ─────────────────────────────────
+      GoRoute(
+        path: AppRoutes.logs,
+        builder: (context, state) => TalkerScreen(
+          talker: talker,
+          appBarTitle: 'App Logs',
+        ),
       ),
     ],
   );
