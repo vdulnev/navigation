@@ -36,22 +36,15 @@ class LoginScreen extends ConsumerWidget {
               const SizedBox(height: 32),
               // Exhaustive switch — compiler enforces all cases are handled.
               switch (state) {
-                LoginFormEditing(:final email, :final password) => _EditingBody(
-                  email: email,
-                  password: password,
+                LoginFormEditing(:final error) => _EditingBody(
+                  notifier: notifier,
+                  credentialsError: error,
+                ),
+                LoginFormCorrect() => _EditingBody(notifier: notifier),
+                LoginFormInvalid(:final error) => _EditingBody(
+                  serverError: error,
                   notifier: notifier,
                 ),
-                LoginFormInvalid(
-                  :final email,
-                  :final password,
-                  error: final errors,
-                ) =>
-                  _EditingBody(
-                    email: email,
-                    password: password,
-                    error: errors,
-                    notifier: notifier,
-                  ),
                 LoginFormSubmitting() => const _SubmittingBody(),
               },
               const SizedBox(height: 16),
@@ -72,23 +65,18 @@ class LoginScreen extends ConsumerWidget {
 
 class _EditingBody extends StatelessWidget {
   const _EditingBody({
-    required this.email,
-    required this.password,
     required this.notifier,
-    this.error,
+    this.serverError,
+    this.credentialsError,
   });
 
-  final String email;
-  final String password;
-  final LoginFormError? error;
+  final LoginServerError? serverError;
+  final LoginCredentialsError? credentialsError;
   final LoginFormNotifier notifier;
 
   @override
   Widget build(BuildContext context) {
-    final error = this.error;
-    // LoginCredentialsError is a marker — use the field values to decide
-    // which specific field error to show.
-    final isCredentialsError = error is LoginCredentialsError;
+    final aServerError = serverError;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -96,9 +84,7 @@ class _EditingBody extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Email',
             border: const OutlineInputBorder(),
-            errorText: isCredentialsError && email.isEmpty
-                ? 'Enter an email'
-                : null,
+            errorText: credentialsError?.emailError,
           ),
           keyboardType: TextInputType.emailAddress,
           onChanged: notifier.setEmail,
@@ -108,25 +94,22 @@ class _EditingBody extends StatelessWidget {
           decoration: InputDecoration(
             labelText: 'Password',
             border: const OutlineInputBorder(),
-            errorText: isCredentialsError && password.isEmpty
-                ? 'Enter a password'
-                : null,
+            errorText: credentialsError?.passwordError,
           ),
           obscureText: true,
           onChanged: notifier.setPassword,
         ),
-        if (error is LoginServerError) ...[
+        if (aServerError != null) ...[
           const SizedBox(height: 12),
           Text(
-            error.message,
+            aServerError.message,
             style: TextStyle(color: Theme.of(context).colorScheme.error),
           ),
         ],
         const SizedBox(height: 24),
         FilledButton(
           onPressed: () async {
-            final ok = await notifier.submit();
-            if (ok && context.mounted) {
+            if (await notifier.submit()) {
               Get.back<bool>(result: true);
             }
           },
