@@ -177,6 +177,57 @@ Each subclass owns its own transition logic (`onEmailChanged` /
 
 ---
 
+## Example 4 — Online Store with GoRouter + Riverpod 3
+
+Same screen layout and navigation flow as Example 2.
+Replaces Navigator 1 with GoRouter's declarative API and uses Riverpod 3
+for all state. Auth guard lives at the router level via `redirect`.
+
+### Key navigation behaviours
+
+| Behaviour | Where |
+|---|---|
+| `StatefulShellRoute.indexedStack` — per-tab back-stack | `app_router.dart` |
+| Router-level auth guard (no imperative nav) | `RouterNotifier.redirect` + `refreshListenable` |
+| Push with typed return value | `context.push<bool>(AppRoutes.login)` |
+| Pop with value | `context.pop(true)` — resolves the Future above |
+| Pass `extra` object to route | `context.push(AppRoutes.shopDetail, extra: product)` |
+| Read `extra` in destination | `state.extra! as Product` |
+| Full-screen modal outside shell | `GoRoute` for `/login` using `MaterialPage(fullscreenDialog: true)` |
+| Tab root pop on active tab tap | `navigationShell.goBranch(index, initialLocation: true)` |
+
+### Key GoRouter patterns
+
+```
+RouterNotifier extends ChangeNotifier
+  └─ listens to authProvider via ref.listen
+  └─ calls notifyListeners() on every auth change
+  └─ GoRouter(refreshListenable: notifier, redirect: notifier.redirect)
+
+// Auth guard — no screen code needed
+String? redirect(BuildContext context, GoRouterState state) {
+  if (!isLoggedIn && loc.startsWith('/basket')) return AppRoutes.login;
+  return null;
+}
+
+// Typed push/pop
+final loggedIn = await context.push<bool>(AppRoutes.login); // in widget
+if (context.mounted) context.pop(true);                     // in LoginScreen
+```
+
+### Architecture difference from getx_riverpod
+
+| Aspect | getx_riverpod | gorouter_riverpod |
+|---|---|---|
+| Navigation API | `Get.toNamed` — no context needed | `context.push` — context required |
+| Navigation location | Providers (`BasketNotifier.addWithAuthGuard`) | Widgets (screens call `context.push`) |
+| Auth guard | Imperative check in provider before push | Declarative `redirect` in router |
+| Logout redirect | `Get.offAllNamed` in provider | `RouterNotifier` triggers `redirect` automatically |
+| Login return value | `await Get.toNamed(…) != true` | `await context.push<bool>(…) == true` |
+| `submit()` return | `void` (calls `Get.back` itself) | `bool` (widget decides whether to `context.pop`) |
+
+---
+
 ## Sub-folders
 
 | Folder | Example | Navigation approach |
@@ -186,3 +237,4 @@ Each subclass owns its own transition logic (`onEmailChanged` /
 | `nav1_drawer/` | Online Store + Drawer | Navigator 1.0 — single flat Navigator + `Drawer` + `pushNamedAndRemoveUntil` |
 | `nav1_rail/` | Online Store + Rail | Navigator 1.0 — nested `Navigator` widgets + `NavigationRail` (same structure as nav1_tabs, different chrome) |
 | `getx_riverpod/` | Online Store | GetX navigation + Riverpod 3 state — sealed `LoginFormState`, `AuthResult`, `NotifierProvider` |
+| `gorouter_riverpod/` | Online Store | GoRouter + Riverpod 3 — `StatefulShellRoute.indexedStack`, `RouterNotifier`, redirect auth guard, `context.push<T>` return value |
