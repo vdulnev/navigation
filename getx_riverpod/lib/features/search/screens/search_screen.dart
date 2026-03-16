@@ -1,24 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../models/product.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/basket_provider.dart';
 import '../../../providers/search_provider.dart';
-import '../../../router/app_routes.dart';
 import '../../../widgets/nav_note_card.dart';
 
 /// Search section — live filter across the product catalogue.
 ///
-/// GetX + Riverpod concepts demonstrated:
-///
-/// • **Derived Riverpod provider**: [searchResultsProvider] is a [Provider]
-///   that reacts to [searchQueryProvider]. The widget just calls
-///   `ref.read(searchQueryProvider.notifier).set(query)` on keystroke — no
-///   manual filtering or setState needed.
-///
-/// • **GetX navigation**: tapping a result calls `Get.toNamed` with arguments.
+/// Navigation delegated to [BasketNotifier]:
+/// • [BasketNotifier.navigateToDetail] — tap a result
+/// • [BasketNotifier.addWithAuthGuard] — add to basket with auth gate
 class SearchScreen extends ConsumerWidget {
   const SearchScreen({super.key});
 
@@ -86,20 +78,11 @@ class SearchScreen extends ConsumerWidget {
           trailing: IconButton(
             icon: const Icon(Icons.add_shopping_cart),
             tooltip: 'Add to basket',
-            onPressed: () async {
-              if (!ref.read(authProvider)) {
-                final loggedIn = await Get.toNamed(AppRoutes.login);
-                if (loggedIn != true) return;
-              }
-              ref.read(basketProvider.notifier).add(product);
-              Get.snackbar(
-                'Added',
-                '${product.name} added to basket',
-                snackPosition: SnackPosition.BOTTOM,
-              );
-            },
+            onPressed: () =>
+                ref.read(basketProvider.notifier).addWithAuthGuard(product),
           ),
-          onTap: () => Get.toNamed(AppRoutes.shopDetail, arguments: product),
+          onTap: () =>
+              ref.read(basketProvider.notifier).navigateToDetail(product),
         );
       },
     );

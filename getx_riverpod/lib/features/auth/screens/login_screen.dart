@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../providers/login_state_provider.dart';
 import '../../../widgets/nav_note_card.dart';
@@ -107,14 +106,7 @@ class _EditingBody extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 24),
-        FilledButton(
-          onPressed: () async {
-            if (await notifier.submit()) {
-              Get.back<bool>(result: true);
-            }
-          },
-          child: const Text('Sign In'),
-        ),
+        FilledButton(onPressed: notifier.submit, child: const Text('Sign In')),
       ],
     );
   }

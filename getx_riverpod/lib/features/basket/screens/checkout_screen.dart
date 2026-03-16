@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../providers/basket_provider.dart';
 import '../../../widgets/nav_note_card.dart';
@@ -46,7 +45,7 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
               ),
               const SizedBox(height: 24),
               FilledButton(
-                onPressed: Get.back,
+                onPressed: ref.read(basketProvider.notifier).navigateBack,
                 child: const Text('Back to Basket'),
               ),
             ],

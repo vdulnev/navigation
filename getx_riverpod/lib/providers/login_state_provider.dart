@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
 import 'auth_provider.dart' show AuthError, AuthSuccess, authProvider;
 
@@ -152,23 +153,19 @@ class LoginFormNotifier extends Notifier<LoginFormState> {
   void setEmail(String v) => state = state.onEmailChanged(v);
   void setPassword(String v) => state = state.onPasswordChanged(v);
 
-  Future<bool> submit() async {
+  Future<void> submit() async {
     final aState = state;
-    if (aState is LoginFormCorrect) {
-      final creds = aState.credentials;
-      final (email, password) = creds;
+    if (aState is! LoginFormCorrect) return;
 
-      state = const LoginFormSubmitting();
-      switch (await ref.read(authProvider.notifier).login(email, password)) {
-        case AuthSuccess():
-          state = const LoginFormEditing();
-          return true;
-        case AuthError(:final message):
-          state = LoginFormInvalid(error: LoginServerError(message: message));
-          return false;
-      }
-    } else {
-      return false;
+    final (email, password) = aState.credentials;
+    state = const LoginFormSubmitting();
+
+    switch (await ref.read(authProvider.notifier).login(email, password)) {
+      case AuthSuccess():
+        state = const LoginFormEditing();
+        Get.back<bool>(result: true);
+      case AuthError(:final message):
+        state = LoginFormInvalid(error: LoginServerError(message: message));
     }
   }
 }

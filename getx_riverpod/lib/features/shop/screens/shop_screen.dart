@@ -1,44 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../models/product.dart';
-import '../../../providers/auth_provider.dart';
 import '../../../providers/basket_provider.dart';
-import '../../../router/app_routes.dart';
 import '../../../widgets/nav_note_card.dart';
 
 /// Shop section — product grid.
 ///
-/// GetX + Riverpod concepts demonstrated:
-///
-/// • **GetX navigation**: `Get.toNamed(AppRoutes.shopDetail, arguments: product)`
-///   pushes above the shell without a BuildContext. No nested Navigator needed.
-///
-/// • **GetX auth guard**: `await Get.toNamed<bool>(AppRoutes.login)` returns
-///   the value passed to `Get.back(result: true)` in LoginScreen.
-///
-/// • **Riverpod reads**: basket mutation via `ref.read(basketProvider.notifier)`
-///   and auth check via `ref.read(authProvider)`.
+/// All navigation delegated to [BasketNotifier]:
+/// • [BasketNotifier.navigateToDetail] — push product detail
+/// • [BasketNotifier.addWithAuthGuard] — auth gate + add + snackbar
 class ShopScreen extends ConsumerWidget {
   const ShopScreen({super.key});
 
-  Future<void> _addToBasket(WidgetRef ref, Product product) async {
-    if (!ref.read(authProvider)) {
-      final loggedIn = await Get.toNamed(AppRoutes.login);
-      if (loggedIn != true) return;
-    }
-    ref.read(basketProvider.notifier).add(product);
-    Get.snackbar(
-      'Added',
-      '${product.name} added to basket',
-      duration: const Duration(seconds: 2),
-      snackPosition: SnackPosition.BOTTOM,
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final basket = ref.read(basketProvider.notifier);
     return Scaffold(
       appBar: AppBar(title: const Text('Shop')),
       body: CustomScrollView(
@@ -47,11 +24,11 @@ class ShopScreen extends ConsumerWidget {
             padding: EdgeInsets.fromLTRB(16, 16, 16, 8),
             sliver: SliverToBoxAdapter(
               child: NavNoteCard(
-                title: 'GetX navigation + Riverpod state',
+                title: 'Navigation in provider, not widget',
                 body:
-                    'Get.toNamed(shopDetail, arguments: product) — no context '
-                    'needed. Auth guard: await Get.toNamed(login) returns bool '
-                    'from Get.back(result: true). Basket via Riverpod notifier.',
+                    'basketProvider.notifier owns navigateToDetail, '
+                    'addWithAuthGuard (auth gate + add + snackbar). '
+                    'ShopScreen has zero Get.* calls.',
               ),
             ),
           ),
@@ -69,9 +46,8 @@ class ShopScreen extends ConsumerWidget {
                 final product = kProducts[index];
                 return _ProductCard(
                   product: product,
-                  onTap: () =>
-                      Get.toNamed(AppRoutes.shopDetail, arguments: product),
-                  onAddToBasket: () => _addToBasket(ref, product),
+                  onTap: () => basket.navigateToDetail(product),
+                  onAddToBasket: () => basket.addWithAuthGuard(product),
                 );
               },
             ),

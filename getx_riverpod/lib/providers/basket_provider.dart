@@ -1,6 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
 
 import '../models/product.dart';
+import '../router/app_routes.dart';
+import 'auth_provider.dart';
 
 class BasketItem {
   BasketItem({required this.product, this.quantity = 1});
@@ -49,4 +52,27 @@ class BasketNotifier extends Notifier<List<BasketItem>> {
   int get itemCount => state.fold(0, (s, i) => s + i.quantity);
 
   double get total => state.fold(0, (s, i) => s + i.product.price * i.quantity);
+
+  /// Auth-guards, adds [product], then shows a confirmation snackbar.
+  /// Used by shop, search, and item-detail screens so none of them need GetX.
+  Future<void> addWithAuthGuard(Product product) async {
+    if (!ref.read(authProvider)) {
+      final loggedIn = await Get.toNamed(AppRoutes.login);
+      if (loggedIn != true) return;
+    }
+    add(product);
+    Get.snackbar(
+      'Added',
+      '${product.name} added to basket',
+      duration: const Duration(seconds: 2),
+      snackPosition: SnackPosition.BOTTOM,
+    );
+  }
+
+  void navigateToDetail(Product product) =>
+      Get.toNamed(AppRoutes.shopDetail, arguments: product);
+
+  void navigateToCheckout() => Get.toNamed(AppRoutes.checkout);
+
+  void navigateBack() => Get.back();
 }

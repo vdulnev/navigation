@@ -1,4 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:get/get.dart';
+
+import '../router/app_routes.dart';
 
 sealed class AuthResult {
   const AuthResult();
@@ -43,4 +46,6 @@ class AuthNotifier extends Notifier<bool> {
     await Future<void>.delayed(const Duration(milliseconds: 300));
     state = false;
   }
+
+  void navigateToLogin() => Get.toNamed(AppRoutes.login);
 }

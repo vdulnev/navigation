@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../providers/auth_provider.dart';
 import '../../../providers/basket_provider.dart';
-import '../../../router/app_routes.dart';
 import '../../../widgets/nav_note_card.dart';
 
 /// Account section — shows a sign-in prompt or the user's profile.
@@ -93,7 +91,7 @@ class AccountScreen extends ConsumerWidget {
           SizedBox(
             width: double.infinity,
             child: FilledButton(
-              onPressed: () => Get.toNamed(AppRoutes.login),
+              onPressed: ref.read(authProvider.notifier).navigateToLogin,
               child: const Text('Sign In'),
             ),
           ),

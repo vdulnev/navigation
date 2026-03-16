@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:get/get.dart';
 
 import '../../../providers/auth_provider.dart';
 import '../../../providers/basket_provider.dart';
-import '../../../router/app_routes.dart';
 import '../../../widgets/nav_note_card.dart';
 
 /// Basket section — requires login to view contents.
@@ -43,7 +41,7 @@ class BasketScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 FilledButton(
-                  onPressed: () => Get.toNamed(AppRoutes.login),
+                  onPressed: ref.read(authProvider.notifier).navigateToLogin,
                   child: const Text('Sign In'),
                 ),
                 const SizedBox(height: 24),
@@ -52,7 +50,7 @@ class BasketScreen extends ConsumerWidget {
                   body:
                       'ref.watch(authProvider) rebuilds this widget when login '
                       'succeeds — no setState() or manual refresh. '
-                      'Get.toNamed(login) navigates without a BuildContext.',
+                      'Navigation delegated to authProvider.notifier.',
                 ),
               ],
             ),
@@ -142,7 +140,7 @@ class BasketScreen extends ConsumerWidget {
                   SizedBox(
                     width: double.infinity,
                     child: FilledButton(
-                      onPressed: () => Get.toNamed(AppRoutes.checkout),
+                      onPressed: notifier.navigateToCheckout,
                       child: const Text('Proceed to Checkout'),
                     ),
                   ),
