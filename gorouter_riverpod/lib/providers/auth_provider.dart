@@ -25,19 +25,24 @@ class AuthNotifier extends Notifier<bool> {
   @override
   bool build() => false;
 
-  /// Accepts any non-empty credentials with a valid email.
-  /// Returns [AuthSuccess] or [AuthError].
+  /// Validates credentials and returns [AuthSuccess] or [AuthError].
+  ///
+  /// Does NOT update [state] — call [setLoggedIn] after navigation so that
+  /// GoRouter's [RouterNotifier] fires after `context.pop()`, not before.
   Future<AuthResult> login(String email, String password) async {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (email.isNotEmpty && password.isNotEmpty) {
       if (!email.contains('@')) {
         return const AuthError('Enter a valid email address.');
       }
-      state = true;
       return const AuthSuccess();
     }
     return const AuthError('Invalid credentials. Try any non-empty values.');
   }
+
+  /// Sets auth state to true. Call this AFTER `context.pop()` so that
+  /// GoRouter rebuilds from the correct route, not from `/login`.
+  void setLoggedIn() => state = true;
 
   Future<void> logout() async {
     await Future<void>.delayed(const Duration(milliseconds: 300));

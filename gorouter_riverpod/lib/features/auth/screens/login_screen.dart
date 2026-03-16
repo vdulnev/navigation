@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
+import '../../../providers/auth_provider.dart';
 import '../../../providers/login_state_provider.dart';
 import '../../../widgets/nav_note_card.dart';
 
@@ -9,16 +10,20 @@ import '../../../widgets/nav_note_card.dart';
 ///
 /// GoRouter + Riverpod concepts demonstrated:
 ///
-/// • **context.pop(true)**: returns a value to the caller that awaited
-///   `context.push<bool>(login)`. Resolves the future on the caller side.
+/// • **Pop before auth state change**: [AuthNotifier.login] validates
+///   credentials but does NOT set `authProvider.state`. `context.pop(true)`
+///   runs first while the route stack is still intact, then
+///   [AuthNotifier.setLoggedIn] fires [RouterNotifier.notifyListeners].
+///   GoRouter rebuilds after the pop — with the correct stack in place.
+///
+/// • **Why auth state must come after pop**: setting `state = true` inside
+///   `login()` triggers [RouterNotifier.notifyListeners] synchronously.
+///   GoRouter reconstructs its stack for the current URL (`/login`) alone,
+///   losing the shell route underneath. `context.canPop()` becomes false
+///   before the `await` in `onSubmit` resumes.
 ///
 /// • **Sealed form state**: [LoginFormState] has four subclasses; the
 ///   exhaustive switch ensures all cases are handled at compile time.
-///
-/// • **Why context is captured at LoginScreen level**: [submit] transitions
-///   through [LoginFormSubmitting], which replaces [_EditingBody] with
-///   [_SubmittingBody]. Capturing context here (not in [_EditingBody]) keeps
-///   it mounted for the full lifetime of the /login route.
 class LoginScreen extends ConsumerWidget {
   const LoginScreen({super.key});
 
@@ -27,11 +32,15 @@ class LoginScreen extends ConsumerWidget {
     final state = ref.watch(loginStateProvider);
     final notifier = ref.read(loginStateProvider.notifier);
 
-    // Callback defined here so it captures LoginScreen's context, which
-    // remains mounted throughout the /login route's lifetime.
     Future<void> onSubmit() async {
       if (await notifier.submit()) {
-        if (context.mounted) context.pop(true);
+        if (context.mounted) {
+          // Pop while the route stack is still intact (auth state not yet set).
+          context.pop(true);
+          // Now fire the auth notification — GoRouter rebuilds from the
+          // correct route, not from /login.
+          ref.read(authProvider.notifier).setLoggedIn();
+        }
       }
     }
 
@@ -64,12 +73,12 @@ class LoginScreen extends ConsumerWidget {
               },
               const SizedBox(height: 16),
               const NavNoteCard(
-                title: 'GoRouter: context.pop(true) + sealed form state',
+                title: 'GoRouter: pop before setting auth state',
                 body:
-                    'context.pop(true) resolves the future from '
-                    'context.push<bool>(login). context is captured at '
-                    'LoginScreen level so it stays mounted across state '
-                    'transitions that swap _EditingBody ↔ _SubmittingBody.',
+                    'auth.login() validates only — does not set authProvider '
+                    'state. context.pop(true) runs first (stack intact), then '
+                    'setLoggedIn() fires RouterNotifier. GoRouter rebuilds '
+                    'from the correct route, not from the bare /login URL.',
               ),
             ],
           ),
