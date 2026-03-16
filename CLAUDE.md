@@ -1,5 +1,9 @@
 # Flutter Navigation Examples — Shared Context
 
+## Rules
+
+- **Never commit without an explicit commit command from the user.**
+
 This folder contains Flutter apps that demonstrate different navigation
 approaches. Each sub-folder is a self-contained example implemented with a
 different navigation strategy.
