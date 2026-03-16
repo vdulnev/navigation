@@ -27,15 +27,15 @@ class RouterNotifier extends ChangeNotifier {
 
   /// Route-level auth guard.
   ///
-  /// Redirects to [AppRoutes.login] when an unauthenticated user navigates
-  /// to a protected route. GoRouter calls this after every [notifyListeners].
+  /// Checkout requires login; basket itself stays inside the shell and shows
+  /// a sign-in prompt inline so the bottom navigation bar remains visible.
   String? redirect(BuildContext context, GoRouterState state) {
     final isLoggedIn = _ref.read(authProvider);
     final loc = state.matchedLocation;
 
-    // Basket and checkout are auth-gated at the router level.
-    if (!isLoggedIn && loc.startsWith('/basket')) {
-      return AppRoutes.login;
+    // Only redirect checkout — basket handles unauthenticated state inline.
+    if (!isLoggedIn && loc == AppRoutes.checkout) {
+      return AppRoutes.basket;
     }
     return null;
   }

@@ -11,9 +11,9 @@ import '../../../widgets/nav_note_card.dart';
 ///
 /// GoRouter + Riverpod concepts demonstrated:
 ///
-/// • **Router-level auth guard**: navigating to `/basket` when unauthenticated
-///   redirects to `/login` in [RouterNotifier.redirect] — the widget never
-///   sees the unauthenticated state via this path.
+/// • **In-screen auth gate**: basket stays inside the shell so the bottom
+///   navigation bar remains visible. The unauthenticated state is handled
+///   here rather than by a router-level redirect, keeping the tab chrome.
 ///
 /// • **Riverpod watch**: `ref.watch(basketProvider)` rebuilds automatically
 ///   when items change — no setState needed after checkout.
@@ -48,11 +48,11 @@ class BasketScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: 24),
                 const NavNoteCard(
-                  title: 'GoRouter: router-level auth guard',
+                  title: 'GoRouter: in-screen auth gate',
                   body:
-                      'RouterNotifier.redirect() redirects /basket → /login '
-                      'when not logged in. authProvider change triggers '
-                      'refreshListenable → redirect re-evaluates.',
+                      'Basket stays inside the shell so the bottom nav bar '
+                      'remains visible. Unauthenticated state is handled '
+                      'inline; RouterNotifier only redirects /checkout.',
                 ),
               ],
             ),
