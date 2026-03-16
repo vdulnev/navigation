@@ -99,11 +99,12 @@ class _CheckoutScreenState extends ConsumerState<CheckoutScreen> {
           ),
           const SizedBox(height: 16),
           const NavNoteCard(
-            title: 'GoRouter: context.pop + Riverpod mutation',
+            title: 'GoRouter: ref.listen pops on logout',
             body:
-                'context.pop() returns to BasketScreen. basketProvider.clear() '
-                'updates Riverpod state; BasketScreen rebuilds reactively — '
-                'no explicit refresh or result value needed.',
+                'ref.listen(authProvider) fires before GoRouter rebuilds. '
+                'When auth drops to false, context.go(basket) navigates '
+                'declaratively — the router redirect only evaluates the active '
+                'tab\'s route so this handles the offstage-branch case.',
           ),
         ],
       ),

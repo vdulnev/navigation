@@ -16,6 +16,10 @@ import '../models/product.dart';
 import '../providers/auth_provider.dart';
 import 'app_routes.dart';
 
+/// Navigator key for the basket branch — allows external code to pop the
+/// basket back-stack without switching tabs.
+final basketNavigatorKey = GlobalKey<NavigatorState>();
+
 /// Bridges Riverpod auth state to GoRouter's [refreshListenable].
 ///
 /// When [authProvider] changes, [notifyListeners] is called and GoRouter
@@ -26,21 +30,6 @@ class RouterNotifier extends ChangeNotifier {
   }
 
   final Ref _ref;
-
-  /// Route-level auth guard.
-  ///
-  /// Checkout requires login; basket itself stays inside the shell and shows
-  /// a sign-in prompt inline so the bottom navigation bar remains visible.
-  String? redirect(BuildContext context, GoRouterState state) {
-    final isLoggedIn = _ref.read(authProvider);
-    final loc = state.matchedLocation;
-
-    // Only redirect checkout — basket handles unauthenticated state inline.
-    if (!isLoggedIn && loc == AppRoutes.checkout) {
-      return AppRoutes.basket;
-    }
-    return null;
-  }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -49,7 +38,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: AppRoutes.shop,
     refreshListenable: notifier,
-    redirect: notifier.redirect,
     // Logs every push / pop / replace to the shared [talker] instance.
     observers: [TalkerRouteObserver(talker)],
     routes: [
@@ -90,8 +78,9 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
-          // Basket tab (auth-gated via redirect above)
+          // Basket tab
           StatefulShellBranch(
+            navigatorKey: basketNavigatorKey,
             routes: [
               GoRoute(
                 path: AppRoutes.basket,
@@ -127,10 +116,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // ── Log viewer — outside the shell ─────────────────────────────────
       GoRoute(
         path: AppRoutes.logs,
-        builder: (context, state) => TalkerScreen(
-          talker: talker,
-          appBarTitle: 'App Logs',
-        ),
+        builder: (context, state) =>
+            TalkerScreen(talker: talker, appBarTitle: 'App Logs'),
       ),
     ],
   );
