@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../../providers/auth_provider.dart';
 import '../../../providers/basket_provider.dart';
+import '../../../router/app_router.dart';
 
 /// Persistent shell with [BottomNavigationBar].
 ///
@@ -23,6 +24,13 @@ import '../../../providers/basket_provider.dart';
 /// * **tabsRouter.stackRouterOfIndex(n)?.popUntilRoot()**: resets a specific
 ///   tab's back-stack without switching the active tab. Used here to pop
 ///   checkout when the user logs out.
+///
+/// * **_authGatedRoutes**: only tabs whose stack contains a known auth-gated
+///   route are reset on logout — other tabs (Shop, Search) keep their state.
+/// Route names that require authentication. On logout, any tab whose stack
+/// contains one of these is popped to root; other tabs are left untouched.
+const _authGatedRoutes = {CheckoutRoute.name};
+
 @RoutePage(name: 'ShellRoute')
 class ShellScreen extends StatelessWidget {
   const ShellScreen({super.key});
@@ -37,8 +45,15 @@ class ShellScreen extends StatelessWidget {
 
             ref.listen<bool>(authProvider, (_, isLoggedIn) {
               if (!isLoggedIn) {
-                // Basket tab is index 2 — reset its stack silently on logout.
-                tabsRouter.stackRouterOfIndex(2)?.popUntilRoot();
+                for (var i = 0; i < tabsRouter.pageCount; i++) {
+                  final stack = tabsRouter.stackRouterOfIndex(i);
+                  if (stack != null &&
+                      stack.stackData.any(
+                        (r) => _authGatedRoutes.contains(r.name),
+                      )) {
+                    stack.popUntilRoot();
+                  }
+                }
               }
             });
 
