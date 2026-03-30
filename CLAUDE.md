@@ -236,5 +236,6 @@ if (context.mounted) context.pop(true);                     // in LoginScreen
 | `nav1_tabs/` | Online Store + Tabs | Navigator 1.0 — nested `Navigator` widgets + `BottomNavigationBar` |
 | `nav1_drawer/` | Online Store + Drawer | Navigator 1.0 — single flat Navigator + `Drawer` + `pushNamedAndRemoveUntil` |
 | `nav1_rail/` | Online Store + Rail | Navigator 1.0 — nested `Navigator` widgets + `NavigationRail` (same structure as nav1_tabs, different chrome) |
+| `getx/` | Online Store | GetX only — `GetxController` + `.obs` + `Obx` for both navigation and state, sealed `LoginFormState` |
 | `getx_riverpod/` | Online Store | GetX navigation + Riverpod 3 state — sealed `LoginFormState`, `AuthResult`, `NotifierProvider` |
 | `gorouter_riverpod/` | Online Store | GoRouter + Riverpod 3 — `StatefulShellRoute.indexedStack`, `RouterNotifier`, redirect auth guard, `context.push<T>` return value |
